@@ -1,0 +1,77 @@
+#include <Wire.h>
+
+/**
+ * Simplified A4988 Stepper Motor Control - 360° Rotation Both Ways
+ * Motor specs: 17HS19-1684S-PG27 Nema 17 with 26.85:1 gearbox
+ * Step angle: 0.067° per step (5373 steps per revolution)
+ */
+
+// Pin definitions
+const int enPin = 12;      // Enable pin
+const int ms1Pin = 11;     // Microstepping control 1
+const int ms2Pin = 10;     // Microstepping control 2
+const int ms3Pin = 9;      // Microstepping control 3
+const int rstPin = 8;      // Reset pin
+const int slpPin = 7;      // Sleep pin
+const int stepPin = 6;     // Step pin
+const int dirPin = 5;      // Direction pin
+
+// Motor parameters for geared motor
+const int stepsPerRevolution = 5373;  // 0.067° per step = 5373 steps per revolution
+const int stepDelay = 1000;           // Microseconds between steps (speed control)
+
+void setup() {
+  Serial.begin(9600);
+  
+  // Configure pins as outputs
+  pinMode(enPin, OUTPUT);
+  pinMode(ms1Pin, OUTPUT);
+  pinMode(ms2Pin, OUTPUT);
+  pinMode(ms3Pin, OUTPUT);
+  pinMode(rstPin, OUTPUT);
+  pinMode(slpPin, OUTPUT);
+  pinMode(stepPin, OUTPUT);
+  pinMode(dirPin, OUTPUT);
+  
+  // Initialize the driver
+  digitalWrite(enPin, LOW);    // Enable the driver (active low)
+  digitalWrite(rstPin, HIGH);  // Not in reset mode
+  digitalWrite(slpPin, HIGH);  // Not in sleep mode
+  
+  // Set Full step mode for more torque
+  digitalWrite(ms1Pin, LOW);
+  digitalWrite(ms2Pin, LOW);
+  digitalWrite(ms3Pin, LOW);
+      
+  Serial.println("Simple 360° Rotation Initialized");
+}
+
+void loop() {
+  // Rotate 360 degrees counterclockwise
+  Serial.println("Rotating 360 degrees counterclockwise");
+  rotateMotor(stepsPerRevolution, 1);  // 1 for counterclockwise
+  delay(1000);  // Wait 1 second
+  
+  // Rotate 360 degrees clockwise
+  Serial.println("Rotating 360 degrees clockwise");
+  rotateMotor(stepsPerRevolution, 0);  // 0 for clockwise
+  delay(1000);  // Wait 1 second
+}
+
+void rotateMotor(int steps, int DIR) {
+  // Set direction
+  if(DIR == 1){
+    digitalWrite(dirPin, HIGH);  // Counterclockwise
+  }
+  else{
+    digitalWrite(dirPin, LOW);   // Clockwise
+  }
+  
+  // Execute steps
+  for(int i = 0; i < steps; i++) {
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(stepDelay);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(stepDelay);
+  }
+}
