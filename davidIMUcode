@@ -1,0 +1,207 @@
+// Code for orientation and direction detection using
+// Adafruit LSM6DSOX + LIS3MDL IMU
+// SCL connected to A5, SDA connected to A4
+
+#include <Adafruit_LSM6DSOX.h>
+#include <Adafruit_LIS3MDL.h>
+#include <Adafruit_Sensor.h>
+#include <Wire.h>
+
+Adafruit_LSM6DSOX sox;
+Adafruit_LIS3MDL lis3mdl;
+
+void setup(void) {
+  Serial.begin(115200);
+  while (!Serial)
+    delay(10); // will pause Zero, Leonardo, etc until serial console opens
+
+  Serial.println("Adafruit LSM6DSOX + LIS3MDL orientation test!");
+
+  // Initialize the LSM6DSOX
+  if (!sox.begin_I2C()) {
+    Serial.println("Failed to find LSM6DSOX chip");
+    while (1) {
+      delay(10);
+    }
+  }
+  Serial.println("LSM6DSOX Found!");
+
+  // Initialize the LIS3MDL
+  if (!lis3mdl.begin_I2C()) {
+    Serial.println("Failed to find LIS3MDL chip");
+    while (1) {
+      delay(10);
+    }
+  }
+  Serial.println("LIS3MDL Found!");
+
+  // Print the current configurations for LSM6DSOX
+  Serial.print("Accelerometer range set to: ");
+  switch (sox.getAccelRange()) {
+  case LSM6DS_ACCEL_RANGE_2_G:
+    Serial.println("+-2G");
+    break;
+  case LSM6DS_ACCEL_RANGE_4_G:
+    Serial.println("+-4G");
+    break;
+  case LSM6DS_ACCEL_RANGE_8_G:
+    Serial.println("+-8G");
+    break;
+  case LSM6DS_ACCEL_RANGE_16_G:
+    Serial.println("+-16G");
+    break;
+  }
+
+  Serial.print("Gyro range set to: ");
+  switch (sox.getGyroRange()) {
+  case LSM6DS_GYRO_RANGE_125_DPS:
+    Serial.println("125 degrees/s");
+    break;
+  case LSM6DS_GYRO_RANGE_250_DPS:
+    Serial.println("250 degrees/s");
+    break;
+  case LSM6DS_GYRO_RANGE_500_DPS:
+    Serial.println("500 degrees/s");
+    break;
+  case LSM6DS_GYRO_RANGE_1000_DPS:
+    Serial.println("1000 degrees/s");
+    break;
+  case LSM6DS_GYRO_RANGE_2000_DPS:
+    Serial.println("2000 degrees/s");
+    break;
+  case ISM330DHCX_GYRO_RANGE_4000_DPS:
+    break; // unsupported range for the DSOX
+  }
+
+  // Print magnetometer settings
+  Serial.print("Magnetometer performance mode set to: ");
+  switch (lis3mdl.getPerformanceMode()) {
+    case LIS3MDL_LOWPOWERMODE: Serial.println("Low"); break;
+    case LIS3MDL_MEDIUMMODE: Serial.println("Medium"); break;
+    case LIS3MDL_HIGHMODE: Serial.println("High"); break;
+    case LIS3MDL_ULTRAHIGHMODE: Serial.println("Ultra-High"); break;
+  }
+
+  Serial.print("Magnetometer data rate set to: ");
+  switch (lis3mdl.getDataRate()) {
+    case LIS3MDL_DATARATE_0_625_HZ: Serial.println("0.625 Hz"); break;
+    case LIS3MDL_DATARATE_1_25_HZ: Serial.println("1.25 Hz"); break;
+    case LIS3MDL_DATARATE_2_5_HZ: Serial.println("2.5 Hz"); break;
+    case LIS3MDL_DATARATE_5_HZ: Serial.println("5 Hz"); break;
+    case LIS3MDL_DATARATE_10_HZ: Serial.println("10 Hz"); break;
+    case LIS3MDL_DATARATE_20_HZ: Serial.println("20 Hz"); break;
+    case LIS3MDL_DATARATE_40_HZ: Serial.println("40 Hz"); break;
+    case LIS3MDL_DATARATE_80_HZ: Serial.println("80 Hz"); break;
+  }
+
+  Serial.println("");
+}
+
+void loop() {
+  // Get sensor events with the readings
+  sensors_event_t accel;
+  sensors_event_t gyro;
+  sensors_event_t temp;
+  sox.getEvent(&accel, &gyro, &temp);
+  
+  // Get magnetometer readings
+  sensors_event_t magEvent;
+  lis3mdl.getEvent(&magEvent);
+
+  // Determine orientation based on accelerometer
+  float ax = accel.acceleration.x;
+  float ay = accel.acceleration.y;
+  float az = accel.acceleration.z;
+  
+  // Calculate pitch and roll in degrees
+  float roll = atan2(ay, az) * 180.0 / PI;
+  float pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / PI;
+  
+  // Determine orientation based on which axis has largest acceleration
+  String orientation = "Unknown";
+  if (abs(ax) > abs(ay) && abs(ax) > abs(az)) {
+    if (ax > 0) orientation = "Right side up";
+    else orientation = "Left side up";
+  } else if (abs(ay) > abs(ax) && abs(ay) > abs(az)) {
+    if (ay > 0) orientation = "Back side up";
+    else orientation = "Front side up";
+  } else if (abs(az) > abs(ax) && abs(az) > abs(ay)) {
+    if (az > 0) orientation = "Facing up";
+    else orientation = "Facing down";
+  }
+  
+  // Calculate heading from magnetometer data
+  float mx = magEvent.magnetic.x;
+  float my = magEvent.magnetic.y;
+  float mz = magEvent.magnetic.z;
+  
+  // Calculate magnetic heading
+  float heading = atan2(my, mx) * 180.0 / PI;
+  
+  // Adjust for heading < 0
+  if (heading < 0) {
+    heading += 360.0;
+  }
+  
+  // Convert heading to cardinal direction
+  String direction;
+  if (heading >= 337.5 || heading < 22.5) direction = "North";
+  else if (heading >= 22.5 && heading < 67.5) direction = "Northeast";
+  else if (heading >= 67.5 && heading < 112.5) direction = "East";
+  else if (heading >= 112.5 && heading < 157.5) direction = "Southeast";
+  else if (heading >= 157.5 && heading < 202.5) direction = "South";
+  else if (heading >= 202.5 && heading < 247.5) direction = "Southwest";
+  else if (heading >= 247.5 && heading < 292.5) direction = "West";
+  else direction = "Northwest";
+  
+  // Print raw sensor data
+  Serial.println("---- Sensor Data ----");
+  Serial.print("Temperature: ");
+  Serial.print(temp.temperature);
+  Serial.println(" °C");
+  
+  Serial.print("Accel X: ");
+  Serial.print(accel.acceleration.x);
+  Serial.print(" \tY: ");
+  Serial.print(accel.acceleration.y);
+  Serial.print(" \tZ: ");
+  Serial.print(accel.acceleration.z);
+  Serial.println(" m/s^2");
+  
+  Serial.print("Gyro X: ");
+  Serial.print(gyro.gyro.x);
+  Serial.print(" \tY: ");
+  Serial.print(gyro.gyro.y);
+  Serial.print(" \tZ: ");
+  Serial.print(gyro.gyro.z);
+  Serial.println(" radians/s");
+  
+  Serial.print("Mag X: ");
+  Serial.print(magEvent.magnetic.x);
+  Serial.print(" \tY: ");
+  Serial.print(magEvent.magnetic.y);
+  Serial.print(" \tZ: ");
+  Serial.print(magEvent.magnetic.z);
+  Serial.println(" uT");
+  
+  // Print orientation and direction
+  Serial.println("\n---- Orientation ----");
+  Serial.print("Orientation: ");
+  Serial.println(orientation);
+  Serial.print("Roll: ");
+  Serial.print(roll);
+  Serial.print("°, Pitch: ");
+  Serial.print(pitch);
+  Serial.println("°");
+  
+  Serial.println("\n---- Direction ----");
+  Serial.print("Heading: ");
+  Serial.print(heading);
+  Serial.println("°");
+  Serial.print("Facing: ");
+  Serial.println(direction);
+  
+  Serial.println("\n-----------------------\n");
+  
+  delay(500);  // Update every 500ms
+}
