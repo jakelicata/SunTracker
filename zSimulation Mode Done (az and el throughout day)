@@ -2,6 +2,7 @@
 
 // biggest note: needs to start around where lines line up on elevation, and just after a click for azimuth
 // because of random changes to mechanics it might nto operate perfectly
+// may require slight tweaks from time to time
 // also only run once for now, pretty sure its not actually resting so dont wanna burn out driver
 
 
