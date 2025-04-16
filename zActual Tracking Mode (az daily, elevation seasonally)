@@ -1,6 +1,10 @@
 #include <Wire.h>
 #include <math.h>
 
+// WHEN RUNNING!!!!!!!
+// It wont stop!!!! I need to wait for RTC before implementing it to have a night mode
+
+
 // future additions:
 // 1) implementing rtc code and stop hardcoding time
 // 2) creating functionality to switch elevation between seasons (according to what day of year it is)
@@ -270,7 +274,9 @@ void loop() {
   if (test_hour >= 24) {
     Serial.println("day over!!!!");
   }
-  delay(5000);
+  delay(1000);
   Serial.println("1 hour later...");
 
 }
+
+
