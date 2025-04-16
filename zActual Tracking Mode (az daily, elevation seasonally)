@@ -1,0 +1,276 @@
+#include <Wire.h>
+#include <math.h>
+
+// future additions:
+// 1) implementing rtc code and stop hardcoding time
+// 2) creating functionality to switch elevation between seasons (according to what day of year it is)
+
+
+
+// IMPORTANT:
+  //// start right before system starts rising (where lines align)
+  //// start facing north (when actually testing)
+
+
+
+// My notes while testing
+
+// pointing direction
+// lowest elevation is 18 degrees
+// highest elevation is about 71-74 degrees
+// state college sun ->
+// winter solstice: ~ 25.17 degrees
+// summer solstice: ~ 72 degrees
+
+
+
+//when talking about solar panel tilt, we are talking about the angle between the solar panel and the ground
+// state college ideal is 41 degrees (its lattitiude)
+// spring/fall : 41 degrees
+// winter: 56 degrees
+// summer: 26 degrees
+// this is tilt off ground (not the angle we want, which is the angle between perpendicular line through senter of panel and horizon)
+// so... quick calculation finds --------  sun angle = 90 - tilt
+// so...
+// spring/fall : 90 - 41 = ~49 degrees
+// winter: 90 - 56 = ~34 degrees
+// summer: 90 - 26 = ~64 degrees
+
+
+
+// total elevation rotation: 11300
+
+
+// finding::: small increments in elevation can't get the solar panel lifted (going to be nearly impossible to track elevation throughout day)
+// not good --- needs a big burst when at the struggle point or it wont lift
+
+
+
+//####################################################################
+//####################     CODE      #################################
+//####################################################################
+
+
+/**
+ * Simplified A4988 Stepper Motor Control - 360° Rotation Both Ways
+ * Motor specs: 17HS19-1684S-PG27 Nema 17 with 26.85:1 gearbox
+ * Step angle: 0.067° per step (5373 steps per revolution)
+ */
+
+
+// Pin definitions
+const int enPin = 12;      // Enable pin
+
+const int ms1Pin = 11;     // Microstepping control 1
+const int ms2Pin = 10;     // Microstepping control 2
+const int ms3Pin = 9;      // Microstepping control 3
+const int rstPin = 8;      // Reset pin
+const int slpPin = 7;      // Sleep pin
+const int stepPin = 6;     // Step pin
+const int dirPin = 5;      // Direction pin
+
+// Motor parameters for motor :: 0.067° per step = 5373 steps per revolution
+const int stepsPerRevolution = 11290; // however, our system performs different because of gear rations
+const int stepDelaySimultaion = 1500;           // Microseconds between steps in simulation mode (speed control)
+
+// setting intial azimuth and elevation of panel
+int az_degree = 0;
+int el_degree = 18; // panel starts at around 18 degrees
+
+
+// THIS WILL BE TAKEN OUT LATER (once rtc hooked up)
+// hard set the time and date
+int test_hour = 5;  // Start at 5am
+int test_minute = 0;
+int test_day_of_year = 56;  // Assume it's day 56 of the year 
+
+
+
+// function used instead of delay, that allows motor no strain driver during delays
+void rest(int ms) {
+  digitalWrite(enPin, HIGH); 
+  delay(ms);
+  digitalWrite(enPin, LOW);   
+  delay(2); 
+}
+
+
+// function to get the elevation of the sun (not really needed yet)
+float getSEA(float latitude, float longitude, int utc_offset) {    
+    float hour_minute = (test_hour + (test_minute / 60.0)) - utc_offset;
+    float g = (360.0 / 365.25) * (test_day_of_year + hour_minute / 24.0);
+    float g_radians = radians(g);
+
+    float declination = 0.396372 - 22.91327 * cos(g_radians) + 4.02543 * sin(g_radians) 
+                        - 0.387205 * cos(2 * g_radians) + 0.051967 * sin(2 * g_radians) 
+                        - 0.154527 * cos(3 * g_radians) + 0.084798 * sin(3 * g_radians);
+
+    float time_correction = 0.004297 + 0.107029 * cos(g_radians) - 1.837877 * sin(g_radians) 
+                            - 0.837378 * cos(2 * g_radians) - 2.340475 * sin(2 * g_radians);
+
+    float SHA = (hour_minute - 12) * 15 + longitude + time_correction;
+    float SHA_corrected = (SHA > 180) ? (SHA - 360) : (SHA < -180 ? SHA + 360 : SHA);
+
+    float lat_radians = radians(latitude);
+    float d_radians = radians(declination);
+    float SHA_radians = radians(SHA_corrected);
+
+    float SZA_radians = acos(sin(lat_radians) * sin(d_radians) + cos(lat_radians) * cos(d_radians) * cos(SHA_radians));
+    float SEA = 90.0 - degrees(SZA_radians);
+
+    return SEA;
+}
+
+
+// Function to get Azimuth Angle (AZ)
+float getAZ(float latitude, float longitude, int utc_offset) {
+    float hour_minute = (test_hour + (test_minute / 60.0)) - utc_offset;
+    float g = (360.0 / 365.25) * (test_day_of_year + hour_minute / 24.0);
+    float g_radians = radians(g);
+
+    float declination = 0.396372 - 22.91327 * cos(g_radians) + 4.02543 * sin(g_radians) 
+                        - 0.387205 * cos(2 * g_radians) + 0.051967 * sin(2 * g_radians) 
+                        - 0.154527 * cos(3 * g_radians) + 0.084798 * sin(3 * g_radians);
+
+    float time_correction = 0.004297 + 0.107029 * cos(g_radians) - 1.837877 * sin(g_radians) 
+                            - 0.837378 * cos(2 * g_radians) - 2.340475 * sin(2 * g_radians);
+
+    float SHA = (hour_minute - 12) * 15 + longitude + time_correction;
+    float SHA_corrected = (SHA + 180) - floor((SHA + 180) / 360.0) * 360 - 180;
+
+    float lat_radians = radians(latitude);
+    float d_radians = radians(declination);
+    float SHA_radians = radians(SHA_corrected);
+
+    float SZA_radians = acos(sin(lat_radians) * sin(d_radians) + cos(lat_radians) * cos(d_radians) * cos(SHA_radians));
+    
+    float cos_AZ = (sin(d_radians) - sin(lat_radians) * cos(SZA_radians)) / (cos(lat_radians) * sin(SZA_radians));
+    cos_AZ = constrain(cos_AZ, -1.0, 1.0);  // Ensuring valid range
+
+    float AZ_rad = acos(cos_AZ);
+    float AZ = degrees(AZ_rad);
+
+    // Apply correct quadrant adjustment
+    if (SHA_corrected > 0) {
+        AZ = 360 - AZ;
+    }
+
+    return AZ;
+}
+
+
+////rotate to sunrise position
+  // simple steps with 390 steps equaling +12 degrees
+
+  // example if sunrise is at 78 degrees, rotate 5 * 12 = 60 .... 60 + 12 = 72 degrees azimuth
+  
+  // this adjusts the solar panel to the proper azimuth, and makes calls to rotatemotor to actually move the motor
+void adjust_motor_az(float az, float az_angle) {
+    while (fabs(az_angle - az) > 12.4) {
+        if (az_angle < az) {
+            Serial.println("Step Clockwise");
+            rotateMotor(390, 0);
+            delay(1000);
+            az_degree += 12.4;
+            az_angle += 12.4;
+        } 
+    }
+    Serial.println("Position Adjusted");
+}
+
+
+// rotates the motor a certain ammount clockwise or counterclockwise based on input (either azimuth or elevation)
+void rotateMotor(int steps, int DIR) {
+  // Set direction
+  if(DIR == 1){
+    digitalWrite(dirPin, HIGH);  // Counterclockwise
+  }
+  else{
+    digitalWrite(dirPin, LOW);   // Clockwise
+  }
+
+  // Execute steps
+  for(int i = 0; i < steps; i++) {
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(stepDelaySimultaion);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(stepDelaySimultaion);
+  }
+}
+
+
+
+
+void setup() {
+  Serial.begin(11520);
+  
+  // Configure pins as outputs
+  pinMode(enPin, OUTPUT);
+  pinMode(ms1Pin, OUTPUT);
+  pinMode(ms2Pin, OUTPUT);
+  pinMode(ms3Pin, OUTPUT);
+  pinMode(rstPin, OUTPUT);
+  pinMode(slpPin, OUTPUT);
+  pinMode(stepPin, OUTPUT);
+  pinMode(dirPin, OUTPUT);
+  
+  // Initialize the driver
+  digitalWrite(enPin, LOW);    // Enable the driver (active low)
+  digitalWrite(rstPin, HIGH);  // Not in reset mode
+  digitalWrite(slpPin, HIGH);  // Not in sleep mode
+  
+  // Set Full step mode for more torque
+  digitalWrite(ms1Pin, LOW);
+  digitalWrite(ms2Pin, LOW);
+  digitalWrite(ms3Pin, LOW);
+      
+  Serial.println("Moving Suntracker into Initial Position");
+
+  //// rotate to avg spring (~49 degrees) (right now its doing around 47)
+  rotateMotor(1800, 1);
+  delay(1000);
+
+  //update elvation angle of system according to how much intitialization raised it
+  el_degree = el_degree + 30;
+
+  //move motor one step to lock in place for accurate azimuth rotations
+  rotateMotor(540, 0); // first click
+  delay(1000);
+  // update azimuth to 12 degrees
+  az_degree = az_degree + 12.4;
+  
+
+
+
+}
+
+
+
+
+void loop() {
+
+  float latitude = 39.9526;   // Philadelphia Latitude
+  float longitude = -75.1652; // Philadelphia Longitude
+  int utc_offset = -5;        // EST (Eastern Standard Time)
+
+  // updated position of sun 
+  float SEA = getSEA(latitude, longitude, utc_offset);
+  float AZ = getAZ(latitude, longitude, utc_offset);
+
+
+
+  //adjust motor according to position of sun
+  adjust_motor_az(AZ, az_degree);
+
+  // WILL TAKE OUT LATER ON vvvvvvvv
+  // hardcoding the changes in the time until rtc is hooked up
+  Serial.println("adjusted, waiting 5 sec");
+  test_hour += 1;
+
+  if (test_hour >= 24) {
+    Serial.println("day over!!!!");
+  }
+  delay(5000);
+  Serial.println("1 hour later...");
+
+}
