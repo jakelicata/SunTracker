@@ -93,7 +93,6 @@ def getAZ(latitude, longitude, utc_offset):
     AZ_rad = math.acos(cos_AZ)
     AZ = math.degrees(AZ_rad)
 
-    # 🔥 FIX: Apply correct quadrant adjustment for Azimuth
     if SHA_corrected > 0:  # Afternoon (SHA > 0), Sun is West
         AZ = 360 - AZ
     else:  # Morning (SHA < 0), Sun is East
