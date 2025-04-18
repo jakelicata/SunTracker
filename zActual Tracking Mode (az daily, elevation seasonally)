@@ -1,13 +1,18 @@
 #include <Wire.h>
 #include <math.h>
-
-// WHEN RUNNING!!!!!!!
-// It wont stop!!!! I need to wait for RTC before implementing it to have a night mode
+#include "RTClib.h"
 
 
-// future additions:
-// 1) implementing rtc code and stop hardcoding time
-// 2) creating functionality to switch elevation between seasons (according to what day of year it is)
+//add
+// fix double rotation if its the exact perfect day when setting up
+// support for when az or el angle pass 360 
+
+
+
+
+RTC_DS3231 rtc;
+
+
 
 
 
@@ -87,22 +92,22 @@ int el_degree = 18; // panel starts at around 18 degrees
 int test_hour = 5;  // Start at 5am
 int test_minute = 0;
 int test_day_of_year = 56;  // Assume it's day 56 of the year 
-
+String season = "";
 
 
 // function used instead of delay, that allows motor no strain driver during delays
-void rest(int ms) {
-  digitalWrite(enPin, HIGH); 
+void sleep(int ms) {
+  digitalWrite(slpPin, LOW);  // Enter sleep mode — chip shuts down
   delay(ms);
-  digitalWrite(enPin, LOW);   
-  delay(2); 
+  digitalWrite(slpPin, HIGH); // Wake up
+  delay(1);                     // Wait for charge pump to stabilize  
 }
 
 
 // function to get the elevation of the sun (not really needed yet)
-float getSEA(float latitude, float longitude, int utc_offset) {    
-    float hour_minute = (test_hour + (test_minute / 60.0)) - utc_offset;
-    float g = (360.0 / 365.25) * (test_day_of_year + hour_minute / 24.0);
+float getSEA(int dayOfYear, int hour, int minute, float latitude, float longitude, int utc_offset) {    
+    float hour_minute = (hour + (minute / 60.0)) - utc_offset;
+    float g = (360.0 / 365.25) * (dayOfYear + hour_minute / 24.0);
     float g_radians = radians(g);
 
     float declination = 0.396372 - 22.91327 * cos(g_radians) + 4.02543 * sin(g_radians) 
@@ -127,9 +132,9 @@ float getSEA(float latitude, float longitude, int utc_offset) {
 
 
 // Function to get Azimuth Angle (AZ)
-float getAZ(float latitude, float longitude, int utc_offset) {
-    float hour_minute = (test_hour + (test_minute / 60.0)) - utc_offset;
-    float g = (360.0 / 365.25) * (test_day_of_year + hour_minute / 24.0);
+float getAZ(int dayOfYear, int hour, int minute, float latitude, float longitude, int utc_offset) {
+    float hour_minute = (hour + (minute / 60.0)) - utc_offset;
+    float g = (360.0 / 365.25) * (dayOfYear + hour_minute / 24.0);
     float g_radians = radians(g);
 
     float declination = 0.396372 - 22.91327 * cos(g_radians) + 4.02543 * sin(g_radians) 
@@ -163,6 +168,88 @@ float getAZ(float latitude, float longitude, int utc_offset) {
 }
 
 
+float calculateSunrise(int dayOfYear, float latitude, float longitude, int utc_offset) {
+  // Try each minute of the next 24 hours until SEA > threshold (e.g. 5°)
+  for (int h = 0; h < 24; h++) {
+    for (int m = 0; m < 60; m++) {
+      float hour_min = h + (m / 60.0);
+      float g = (360.0 / 365.25) * (dayOfYear + hour_min / 24.0);
+      float g_radians = radians(g);
+
+      float declination = 0.396372 - 22.91327 * cos(g_radians) + 4.02543 * sin(g_radians)
+                          - 0.387205 * cos(2 * g_radians) + 0.051967 * sin(2 * g_radians)
+                          - 0.154527 * cos(3 * g_radians) + 0.084798 * sin(3 * g_radians);
+
+      float time_correction = 0.004297 + 0.107029 * cos(g_radians) - 1.837877 * sin(g_radians)
+                              - 0.837378 * cos(2 * g_radians) - 2.340475 * sin(2 * g_radians);
+
+      float SHA = (hour_min - 12) * 15 + longitude + time_correction;
+      float SHA_corrected = (SHA > 180) ? (SHA - 360) : (SHA < -180 ? SHA + 360 : SHA);
+
+      float lat_radians = radians(latitude);
+      float d_radians = radians(declination);
+      float SHA_radians = radians(SHA_corrected);
+
+      float SZA_radians = acos(sin(lat_radians) * sin(d_radians) + cos(lat_radians) * cos(d_radians) * cos(SHA_radians));
+      float SEA = 90.0 - degrees(SZA_radians);
+
+      if (SEA > 5) {
+        return h + (m / 60.0);  // Return sunrise hour in decimal format
+      }
+    }
+  }
+
+  return 6.0;  // Fallback: assume sunrise at 7AM
+}
+
+
+
+void seasonalChangeElevation(int dayOfYear) {
+  
+    
+  switch(dayOfYear){
+    case 79: //winter -> spring
+      rotateMotor(5300,1);
+      delay(1000);
+      season = "spring";
+      el_degree = 47;
+      rotateMotor(540, 0); // first click
+      delay(1000);
+      az_degree += 12.4;
+      break;
+    case 171: //spring -> summer
+      rotateMotor(2000,1);
+      delay(1000);
+      el_degree = 61;
+      season = "summer";
+      rotateMotor(540, 0); // first click
+      delay(1000);
+      az_degree += 12.4;
+      break;
+    case 265: //summer -> falle
+      rotateMotor(1450,1);
+      delay(1000);
+      el_degree = 47;
+      season = "fall";
+      rotateMotor(540, 0); // first click
+      delay(1000);
+      az_degree += 12.4;
+      break;
+    case 355: //fall -> winter
+      rotateMotor(1050,1);
+      delay(1000);
+      el_degree = 36;
+      season = "winter";
+      rotateMotor(540, 0); // first click
+      delay(1000);
+      az_degree += 12.4;
+      break;
+  }
+  Serial.println("Season Adjusted");
+}
+
+
+
 ////rotate to sunrise position
   // simple steps with 390 steps equaling +12 degrees
 
@@ -180,6 +267,8 @@ void adjust_motor_az(float az, float az_angle) {
         } 
     }
     Serial.println("Position Adjusted");
+    Serial.println(az_degree);
+    Serial.println(el_degree);
 }
 
 
@@ -203,10 +292,17 @@ void rotateMotor(int steps, int DIR) {
 }
 
 
+//setup makes it go to spring
+
+// if summer, then go hear and update
+// if fall, then go hear and update,
+//if winter, then go hear and update, etc.
 
 
 void setup() {
-  Serial.begin(11520);
+  Serial.begin(115200);
+  delay(500);  // Give time for Serial
+  Serial.println("Serial started");
   
   // Configure pins as outputs
   pinMode(enPin, OUTPUT);
@@ -227,6 +323,15 @@ void setup() {
   digitalWrite(ms1Pin, LOW);
   digitalWrite(ms2Pin, LOW);
   digitalWrite(ms3Pin, LOW);
+
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1); // stops
+  }
+
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); // <<<<----- sets time to compile time (good for if unplugged) - may be a couple sec behind
+
+  Serial.println("RTC date is set");
       
   Serial.println("Moving Suntracker into Initial Position");
 
@@ -242,7 +347,71 @@ void setup() {
   delay(1000);
   // update azimuth to 12 degrees
   az_degree = az_degree + 12.4;
+      // EST (Eastern Standard Time)
+
+  DateTime time = rtc.now();
+
+  int dayOfYear = (time.unixtime() - DateTime(time.year(), 1, 1).unixtime()) / 86400 + 1;
+
+  // if its not spring, make setup for the current season
+  if(dayOfYear > 171 and dayOfYear <= 265){
+    rotateMotor(2000,1);
+    delay(1000);
+    az_degree = 61;
+    season = "summer";
+    rotateMotor(540, 0); // first click
+    delay(1000);
+    az_degree += 12.4;
+  }else if(dayOfYear > 265 and dayOfYear <= 365){
+    rotateMotor(2000,1);
+    delay(1000);
+    az_degree = 61;
+    season = "summer";
+
+    rotateMotor(540, 0); // first click
+    delay(1000);
+    az_degree += 12.4;
+
+    rotateMotor(1450,1);
+    delay(1000);
+    az_degree = 47;
+    season = "fall";
+
+    rotateMotor(540, 0); // first click
+    delay(1000);
+    az_degree += 12.4;
+    
+  }else if(dayOfYear > 365 or dayOfYear <= 79){
+    rotateMotor(2000,1);
+    delay(1000);
+    az_degree = 61;
+    season = "summer";
+    
+    rotateMotor(540, 0); // first click
+    delay(1000);
+    az_degree += 12.4;
+
+    rotateMotor(1450,1);
+    delay(1000);
+    az_degree = 47;
+    season = "fall";
+
+    rotateMotor(540, 0); // first click
+    delay(1000);
+    az_degree += 12.4;
+
+    rotateMotor(1050,1);
+    delay(1000);
+    el_degree = 36;
+    season = "winter";
+    rotateMotor(540, 0); // first click
+    delay(1000);
+    az_degree += 12.4;
+  }
+
   
+
+
 
 
 
@@ -257,9 +426,31 @@ void loop() {
   float longitude = -75.1652; // Philadelphia Longitude
   int utc_offset = -5;        // EST (Eastern Standard Time)
 
+  DateTime time = rtc.now();
+
+  int dayOfYear = (time.unixtime() - DateTime(time.year(), 1, 1).unixtime()) / 86400 + 1;
+  int hour = time.hour();
+  int minute = time.minute();
+
+  Serial.println(String("DateTime::TIMESTAMP_FULL:\t")+time.timestamp(DateTime::TIMESTAMP_FULL));
+
+  if (dayOfYear == 79 or dayOfYear == 171 or dayOfYear == 265 or dayOfYear == 355){
+      seasonalChangeElevation(dayOfYear);
+  }
+
   // updated position of sun 
-  float SEA = getSEA(latitude, longitude, utc_offset);
-  float AZ = getAZ(latitude, longitude, utc_offset);
+  float SEA = getSEA(dayOfYear, hour, minute, latitude, longitude, utc_offset);
+  float AZ = getAZ(dayOfYear, hour, minute, latitude, longitude, utc_offset);
+
+  if (SEA < 5) {
+    Serial.println("Night mode active: putting motor to sleep.");
+    digitalWrite(slpPin, LOW);  // Sleep mode
+    float sunrise = calculateSunrise(dayOfYear, latitude, longitude, utc_offset);
+    float nightTime = (24-hour) + sunrise;
+    float waitTime = nightTime * (60000 * nightTime);
+    delay(waitTime);               // // wait like 6 hours?
+    return;
+  } 
 
 
 
@@ -269,14 +460,7 @@ void loop() {
   // WILL TAKE OUT LATER ON vvvvvvvv
   // hardcoding the changes in the time until rtc is hooked up
   Serial.println("adjusted, waiting 5 sec");
-  test_hour += 1;
 
-  if (test_hour >= 24) {
-    Serial.println("day over!!!!");
-  }
-  delay(1000);
-  Serial.println("1 hour later...");
+  sleep(100000);
 
 }
-
-
