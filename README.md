@@ -24,4 +24,55 @@ Additionally, we have kept some of the older code files in the folder "Old_Proto
 - ADD A COUPLE SOLID WORKS DRAWING
 
 
+## Setup
+
+(may require hand cranking for initial steups)
+
+**SunTrackingMode**
+- Ensure system is facing North (the normal of the solar panel)
+- Ensure lines of the 6-bar linkage system are aligned
+- Ensure that the azimuth rotation is not between "clicks"
+  
+**SimulationMode** 
+- Ensure lines of the 6-bar linkage system are aligned
+- Ensure that the azimuth rotation is not between "clicks"
+
+- **YES**
+<img width="363" alt="Screenshot 2025-04-28 at 11 33 14 AM" src="https://github.com/user-attachments/assets/c3ef35f0-657a-4fe1-9f7f-d2d59ae5f542" />
+![IMG_4513](https://github.com/user-attachments/assets/09a949dc-7601-4ce9-9231-5a319e7da16c)
+
+
+- **NO**
+<img width="338" alt="Screenshot 2025-04-28 at 11 33 20 AM" src="https://github.com/user-attachments/assets/aa8e0242-6d74-448e-a358-9a2d4ee48af6" />
+
+
+
+
+## Warning/Tips
+
+Mechanical Variability:
+- Actual steps for rotation/elevation may drift over time due to wear, temperature or environmental distrubances.
+
+Manual Changes:
+- If making changes to code, ensure that system is tested again and everything is recalibrated (adjustments in steps may be needed)
+
+Overheating:
+- When running simulation mode, ensure to not run too frequently to avoid motor driver from overheating.
+
+
+
+
+
+## SunTrackingMode
+
+
+## SimulationMode
+
+
+## Future Improvements
+
+
+
+
+
 
