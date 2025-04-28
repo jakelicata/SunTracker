@@ -366,9 +366,11 @@ void setup() {
 void loop() {
 
   // location and time offset of solar panel
-  float latitude = 40.7934;   // Philadelphia Latitude
-  float longitude = -77.8600; // Philadelphia Longitude
+  float latitude = 40.7934;   // State College Latitude
+  float longitude = -77.8600; // State College Longitude
   int utc_offset;
+
+  DateTime time = rtc.now();
 
   // need to adjust these statements depending on where tracker is placed
   if (isDST(time)) {
@@ -377,8 +379,7 @@ void loop() {
     utc_offset = -5; // Eastern Standard Time
   }
 
-  DateTime time = rtc.now();
-
+ 
   // find day of year and adjust for leap year
   int dayOfYear = (time.unixtime() - DateTime(time.year(), 1, 1).unixtime()) / 86400 + 1;
   if (isLeapYear(time.year()) && time.month() > 2) {
@@ -406,7 +407,7 @@ void loop() {
     digitalWrite(slpPin, LOW);  // Sleep mode
     float sunrise = calculateSunrise(dayOfYear, latitude, longitude, utc_offset);
     float nightTime = (24-hour) + sunrise;
-    float waitTime = nightTime * (60000 * nightTime);
+    float waitTime = (60000 * nightTime);
     delay(waitTime);               // // wait like 6 hours?
     return;
   } 
