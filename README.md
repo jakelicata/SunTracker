@@ -12,14 +12,16 @@ Additionally, we have kept some of the older code files in the folder "Old_Proto
 
 
 ## Hardware Used
-- Arduino Uno R3
+- Arduino UNO R4 Minima
+- DS3231 Real-time Clock Modul
 - A4988 Stepper Motor Driver
-•	DS3231 RTC Module
-•	Nema 17 Stepper Motor (17HS19-1684S-PG27 with 26.85:1 gearbox)
-•	Solar Panel Mount with Dual-Axis Movement
-•	External 12V or 24V power supply (for motor)
+- Nema 17 Stepper Motor Bipolar (L=48mm w/ Gear Ratio 27:1 Planetary Gearbox)
+- 2 KBT 12 V 2600mAh rechargeable batteries (wired in series)
+- Solar Panel Gear System with Dual-Axis Movement
 
-<img width="784" alt="Screenshot 2025-04-28 at 11 05 34 AM" src="https://github.com/user-attachments/assets/b4560993-84a4-4762-a612-cb0d578cea58" />
+<img width="650" alt="Screenshot 2025-04-28 at 11 05 34 AM" src="https://github.com/user-attachments/assets/b4560993-84a4-4762-a612-cb0d578cea58" />
+
+- ADD A COUPLE SOLID WORKS DRAWING
 
 
 
