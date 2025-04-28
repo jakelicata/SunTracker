@@ -37,6 +37,10 @@ Additionally, we have kept some of the older code files in the folder "Old_Proto
 - Ensure lines of the 6-bar linkage system are aligned
 - Ensure that the azimuth rotation is not between "clicks"
 
+</br>
+</br>
+</br>
+
 - **YES** (to below)
 <img width="350" alt="Screenshot 2025-04-28 at 11 33 14 AM" src="https://github.com/user-attachments/assets/c3ef35f0-657a-4fe1-9f7f-d2d59ae5f542" />
 </br>
