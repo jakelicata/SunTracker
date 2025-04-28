@@ -102,6 +102,7 @@ Overheating:
 ## Future Improvements
 - More elevation changes throughout year (potentially even daily elevation adjustment)
 - Finetuning of mechanical system to allow for more accuracy
+- Incorporate toggle switch to be able to switch between different modes and turn off system
 
 
 
