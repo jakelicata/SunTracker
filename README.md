@@ -12,8 +12,8 @@ Additionally, we have kept some of the older code files in the folder "Old_Proto
 
 
 ## Hardware Used
-•	Arduino Uno R3
-•	A4988 Stepper Motor Driver
+- Arduino Uno R3
+- A4988 Stepper Motor Driver
 •	DS3231 RTC Module
 •	Nema 17 Stepper Motor (17HS19-1684S-PG27 with 26.85:1 gearbox)
 •	Solar Panel Mount with Dual-Axis Movement
