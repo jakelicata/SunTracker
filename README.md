@@ -69,6 +69,32 @@ Overheating:
 
 ## SunTrackingMode
 
+**Brief Overview:**
+- Sun Position Tracking: Calculates real-time solar elevation and azimuth using a variation of Ken Willmott's SolarPosition algorithm.
+- Motor Control: Adjusts solar panel position with A4988 stepper motor driver.
+- Seasonal Adjustment: Automatically shifts tilt for spring, summer, fall, and winter.
+- Daylight Saving Time: Automatically detects and adjusts between EST and EDT.
+- Leap Year Awareness: Correctly accounts for leap years in date tracking.
+- Night Mode: Sleeps the system when the sun sets and automatically wakes near sunrise.
+
+**Functions:**
+- Sleep(time)​ -> Puts our driver/motor to sleep for specified time​
+- isLeapYear(year) -> determines if its a leap year
+- isDST(dateTime) -> adjusts utc_offset for daylight savings
+- GetSEA(day of year, hour, minute, utc offset, lat, long)​ -> Determines sun elevation based on time and location​
+- GetAZ(day of year, hour, minute, utc offset, lat, long)​ -> Determines sun elevation based on time and location​
+- CalculateSunrise(day of year, utc offset, lat, long)​ -> Determines when sunrise will be for next day and how long the nightime will be​
+- SeasonalChangeElevation(dayOfYear)​ -> Determines when to change elevation (when the season has officially changed)​
+- AdjustMotorAz(suns azimuth position, panel azimuth direction)​ -> Compares suns position to solar panel and adjusts solar panel until within specific threshold
+- RotatemotorSteps(steps, direction)​ -> Rotate motor a specific number of steps either counter clockwise or clockwise (elevation or azimuth)​
+
+**Useage**
+1. Follow Manual Setup Instructions
+2. Add adjustments to code as needed (long/lat, timezone offset, etc.)
+3. Upload code to Arduino
+  
+​
+
 
 ## SimulationMode
 
