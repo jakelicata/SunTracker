@@ -10,6 +10,8 @@ Both files control a mechanically geared solar tracker that utilizes a single ac
 
 Additionally, we have kept some of the older code files in the folder "Old_Prototyping_Code" in order to fully document out process.
 
+Lastly, there remains a folder named "Old_Protoypting_Code." This folder is for the sole purpose of maintaining old files for the contributers to go back to document progress, and are not needed for any other reason.
+
 
 ## Hardware Used
 - Arduino UNO R4 Minima
