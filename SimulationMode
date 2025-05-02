@@ -90,26 +90,33 @@ void loop() {
   Serial.read();  
 
   if (option == 1) {
-    SimulationMode();
+    daySimulation();
   }
   else if (option == 2) {
-    rotateMotor(11600, 0); //azimuth rotation
-    sleep(30000);
+    azimuthCycle();
   }
   else if (option == 3) {
-    rotateMotor(11550, 1); //elevation rotation
-    sleep(30000);
+    elevationCycle();
   }
   else {
     Serial.println("Invalid option. Please enter 1, 2, or 3.");
   }
 }
 
+void azimuthCycle() {
+    rotateMotor(11600, 0); //azimuth rotation
+    sleep(30000);
+}
+
+void elevationCycle(){
+    rotateMotor(11550, 1); //elevation rotation
+    sleep(30000);
+}
 
 
-void SimulationMode() {
+void daySimulation() {
   /////////////////////////////////////////
-  ///////////Rotate Halfway up and 2 clicks /////////////
+  ///////////Rotate Halfway up and 2 clicks azimuth /////////////
   rotateMotor(1250, 1);  
   delay(1000); // Wait 1 second
 
@@ -123,7 +130,7 @@ void SimulationMode() {
 
 
   ///////////////////////////////////////////
-  ////////// Rotate rest of way up and 2 clicks ///////////
+  ////////// Rotate rest of way up and 3 clicks azimuth///////////
   rotateMotor(1750, 1);  
   delay(1000);  
 
@@ -137,7 +144,7 @@ void SimulationMode() {
   Serial.println("Elevated Fully Up | Rotated 37.2 degrees azimuth");
 
   ///////////////////////////////////////////
-  ////////// Cycle through top delay, and rotate 2 clicks ///////////
+  ////////// Cycle through top delay, and rotate 2 clicks azimuth///////////
   rotateMotor(1800, 1);  // 0 for clockwise
   delay(1000);  // Wait 1 second
 
