@@ -10,7 +10,7 @@ Both files control a mechanically geared solar tracker that utilizes a single ac
 
 Additionally, we have kept some of the older code files in the folder "Old_Prototyping_Code" in order to fully document out process.
 
-Lastly, there remains a folder named "Old_Protoypting_Code." This folder is for the sole purpose of maintaining old files for the contributers to go back to document progress, and are not needed for any other reason.
+Lastly, there remains **a folder named "Old_Protoypting_Code."** This folder is for the sole purpose of maintaining old files for the contributers to go back to document progress, and are not needed for any other reason.
 
 
 ## Hardware Used
@@ -23,7 +23,9 @@ Lastly, there remains a folder named "Old_Protoypting_Code." This folder is for 
 
 <img width="650" alt="Screenshot 2025-04-28 at 11 05 34 AM" src="https://github.com/user-attachments/assets/b4560993-84a4-4762-a612-cb0d578cea58" />
 
-- ADD A COUPLE SOLID WORKS DRAWING
+## Physical Prototype
+
+<img width="386" alt="Screenshot 2025-05-01 at 8 51 11 PM" src="https://github.com/user-attachments/assets/e544afe6-c2b2-41c5-969f-cab7d5157979" />
 
 
 ## Setup
