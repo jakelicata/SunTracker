@@ -80,6 +80,7 @@ Overheating:
 **Functions:**
 - Sleep(time)​ -> Puts our driver/motor to sleep for specified time​
 - isLeapYear(year) -> determines if its a leap year
+- returnToNorth() -> returns the motor to a northern facing position
 - isDST(dateTime) -> adjusts utc_offset for daylight savings
 - GetSEA(day of year, hour, minute, utc offset, lat, long)​ -> Determines sun elevation based on time and location​
 - GetAZ(day of year, hour, minute, utc offset, lat, long)​ -> Determines sun elevation based on time and location​
@@ -98,11 +99,48 @@ Overheating:
 
 ## SimulationMode
 
+**Brief Overview:**
+- Purpose: Demonstrates the system’s capability to adjust azimuth and elevation accurately, and validates full control of movement.
+- Upon running, the user is prompted via the Arduino Serial Monitor to enter:
+  - 1 for a full daily cycle simulation,
+  - 2 for a full azimuth rotation,
+  - 3 for a full elevation cycle.
 
-## Future Improvements
-- More elevation changes throughout year (potentially even daily elevation adjustment)
-- Finetuning of mechanical system to allow for more accuracy
-- Incorporate toggle switch to be able to switch between different modes and turn off system
+- Option 1: Generalized Day Simulation
+  - Elevates tracker halfway up.
+  - Rotates 24.8° azimuth.
+  - Elevates to full height.
+  - Rotates 37.2° azimuth.
+  - Waits at top position.
+  - Rotates 24.8° azimuth.
+  - Lowers to halfway position.
+  - Rotates 24.8° azimuth.
+  - Lowers to bottom position.
+  - Rotates 24.8° azimuth.
+  - Waits at bottom position.
+  - Rotates azimuth back to the starting position.
+
+- Option 2: Full Azimuth Rotation
+  - Performs a complete 360° rotation in the azimuth direction.
+
+- Option 3: Full Elevation Cycle
+
+  - Elevates from the starting position to maximum height.
+  - Lowers back down to the starting position.
+
+
+
+**Functions:**
+- Sleep(time) –> Puts the driver and motor into a low-power sleep mode for the specified duration (in milliseconds).
+- azimuthCycle() –> Performs a full azimuth rotation of the system.
+- elevationCycle() –> Performs a full elevation cycle of the system.
+- daySimulation() –> Performs the afirmentioned day simulation of the system (the description of which can be found in the preceding paragraph.
+- rotateMotor(steps, direction)  –> Rotates the stepper motor a specific number of steps in the desired direction (clockwise or counterclockwise) to control azimuth or elevation. 
+
+**Useage**
+1. Follow Manual Setup Instructions
+2. Upload code to Arduino
+
 
 
 
