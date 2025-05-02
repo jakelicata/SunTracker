@@ -1,10 +1,6 @@
 ## Overview
 
-Current single-axis and fixed solar panel installations capture only a fraction of potential solar energy, resulting in suboptimal power generation. The primary limitation of these solar panels is the inability to dynamically adjust panel orientation to match the sun's changing position throughout the day and across seasons. Existing two-axis tracking solutions are prohibitively expensive and power hungry, typically requiring two separate actuators for azimuth and elevation rotation.  
-
-This report centers on the development of an efficient sun-tracking solar panel system. The objective is to develop a cost-effective single-actuator two-axis tracking mechanism that can dynamically optimize panel alignment, maximize energy capture, and reduce overall costs. 
-
-In this introduction, we outline the fundamental purpose of our project: to enhance solar energy absorption by creating an affordable and efficient tracking system that overcomes the limitations of fixed and single-axis panels. The following sections will delve into the details of our requirements review, system architecture, prototype results, design analysis and research, project management, and final solution. 
+Current single-axis and fixed solar panel installations capture only a fraction of potential solar energy, resulting in suboptimal power generation. ​ The primary limitation is the inability to dynamically adjust panel orientation to match the sun's changing position throughout the day and across seasons.​ Existing two-axis tracking solutions are prohibitively expensive and power hungry, typically requiring two separate actuators for azimuth and elevation rotation. ​ The objective is to develop a two-axis tracking mechanism that utilizes just a single actuator to dynamically optimize panel alignment, maximize energy capture, and reduce overall costs.​
 
 This project implements a solar panel sun-tracking system using an Arduino UNO R4 Minima, DS3231 Real-time Clock Module , A4988 Stepper Motor Driver, Nema 17 Bipolar Stepper Motor, 2 KBT 12V 2600mAh rechargeable batteries, and a variation of Ken Willmott's SunPosition library (https://github.com/KenWillmott/SolarPosition).
 
