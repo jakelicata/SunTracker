@@ -246,6 +246,12 @@ bool isDST(DateTime now) {
   return false; // fallback
 }
 
+void returnToNorth(){
+  while (az_angle != 359.6) {
+        rotateMotor(390, 0);
+    }
+  az_degree = 0;
+}
 
 
 void setup() {
@@ -408,7 +414,8 @@ void loop() {
     float sunrise = calculateSunrise(dayOfYear, latitude, longitude, utc_offset);
     float nightTime = (24-hour) + sunrise;
     float waitTime = (60000 * nightTime);
-    delay(waitTime);               // // wait like 6 hours?
+    delay(waitTime);
+    returnToNorth(); //move the panel back to facing North
     return;
   } 
 
